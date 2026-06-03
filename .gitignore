@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+data/
+outputs/
+plots/
+logs/
+
+*.g3
+*.g3.gz
+*.fits
+*.pkl
+*.npy
+*.npz
