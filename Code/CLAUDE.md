@@ -128,3 +128,21 @@ When plotting or analyzing maps, first ask clarifying questions about details su
 - whether the output should be saved or only displayed
 
 The goal is not only to produce working code. The goal is for me to understand and be able to maintain the analysis pipeline.
+
+---
+
+## Code comment style
+
+Do not use decorative separator lines in comments such as:
+
+```python
+# ── Section label ─────────────────────────────────────────────────────────────
+```
+
+Use plain comments only:
+
+```python
+# Section label
+```
+
+This applies to all Python files and notebook cells.
