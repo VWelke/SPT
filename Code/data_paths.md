@@ -59,3 +59,13 @@ Keys per frame: `T`, `Q`, `U`, `Wpol`, `Id`.
 
 All masks: HEALPix nside=8192, single array key `'mask'`, values 0–1.  
 When used with nside=2048 maps, downgrade with `hp.ud_grade(apod, nside_out=2048)`.
+
+
+change code to for each frequency pick 100 fits
+ cd  /sptgrid/analysis/spt3g_d1_midell_tqu_healpix/real_data_maps/signflip_noise/
+
+ sth like that
+
+ /home/creichardt/spt3g_software/sources/mask_lists/
+
+ ' high_ell_TT_2021_1500d_source_mask_6mJy_plusedges.txt'
