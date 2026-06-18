@@ -9,6 +9,9 @@ import numpy as np
 import healpy as hp
 
 # Config — edit these before running
+
+SIGNFLIP_DIR = "/sptgrid/analysis/spt3g_d1_midell_tqu_healpix/real_data_maps/signflip_noise/"
+
 SIGNFLIP_FILES = [
     # "/sptgrid/.../signflip_bundle_000.fits",
     # "/sptgrid/.../signflip_bundle_001.fits",
@@ -27,7 +30,7 @@ MASK_FILES = {
     "mask_apod_60"  : "puremask8192_0p5medwt_60arcmin.npz",
 }
 
-LMAX     = 5000
+LMAX     = 3000
 OUT_FILE = "/sptlocal/user/vwelke/lowl_bb_tiles/noise_psd_BB_fits.npz"
 
 
