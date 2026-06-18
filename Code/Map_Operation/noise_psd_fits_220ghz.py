@@ -4,17 +4,26 @@ Compute BB noise pseudo-Cl from sign-flip FITS maps.
 Run from terminal: python noise_psd_fits.py
 """
 
+# cd ~/Initial_test/Code/Map_Operation
+# nohup python noise_psd_fits_220ghz.py > noise_psd_fits_220ghz.log 2>&1 &
+# tail -f noise_psd_fits_220ghz.log
+
 import os
 import numpy as np
 import healpy as hp
+import time
 
 # Config — edit these before running
 
 SIGNFLIP_DIR = "/sptgrid/analysis/spt3g_d1_midell_tqu_healpix/real_data_maps/signflip_noise/"
 
+index = np.random.randint(1, 500, 1) 
+#SIGNFLIP_FILES = [
+#    os.path.join(SIGNFLIP_DIR, f"signflip_noise_permutation{i}_220ghz.fits") for i in index
+#]
+
 SIGNFLIP_FILES = [
-    # "/sptgrid/.../signflip_bundle_000.fits",
-    # "/sptgrid/.../signflip_bundle_001.fits",
+    os.path.join(SIGNFLIP_DIR, f"signflip_noise_permutation499_220ghz.fits") for i in index
 ]
 
 MASK_DIR    = "/sptlocal/user/creichardt/bb2020"
@@ -31,12 +40,11 @@ MASK_FILES = {
 }
 
 LMAX     = 3000
-OUT_FILE = "/sptlocal/user/vwelke/lowl_bb_tiles/noise_psd_BB_fits.npz"
+OUT_FILE = "/sptlocal/user/vwelke/lowl_bb_tiles/noise_psd_BB_fits_220ghz.npz"
 
 
 def main():
-    if len(SIGNFLIP_FILES) == 0:
-        raise RuntimeError("No sign-flip files listed. Add paths to SIGNFLIP_FILES.")
+    t_start = time.time()
 
     # Load mask
     mask_path = os.path.join(MASK_DIR, MASK_FILES[ACTIVE_MASK])
@@ -52,12 +60,11 @@ def main():
     N = len(SIGNFLIP_FILES)
 
     for i, fpath in enumerate(SIGNFLIP_FILES):
+        t_file_start = time.time()
         Q_sf = hp.read_map(fpath, field=1, partial=False)
         U_sf = hp.read_map(fpath, field=2, partial=False)
 
-        # Resize mask if nside differs from map
-        nside_sf = hp.get_nside(Q_sf)
-        apod_sf  = hp.ud_grade(apod, nside_out=nside_sf) if nside_sf != nside_mask else apod
+        apod_sf  =  apod 
 
         # Build combined mask from observed pixels + apodisation
         obs_sf       = np.isfinite(Q_sf) & (Q_sf != hp.UNSEEN)
@@ -74,12 +81,15 @@ def main():
 
         del Q_sf, U_sf, T_zeros, cls
         print(f"  [{i+1}/{N}]  {os.path.basename(fpath)}")
+        print(f"    Time for file: {time.time() - t_file_start:.2f} seconds")
 
     cl_BB_noise = cl_BB_sum / N
     ell         = np.arange(LMAX + 1)
 
     os.makedirs(os.path.dirname(OUT_FILE), exist_ok=True)
     np.savez(OUT_FILE, ell=ell, N_l=cl_BB_noise, N=N, mask=ACTIVE_MASK)
+    t_end = time.time()
+    print(f"\nTotal time: {t_end - t_start:.2f} seconds")
     print(f"\nDone. Saved → {OUT_FILE}")
     print(f"Load with: data = np.load('{OUT_FILE}'); ell = data['ell']; N_l = data['N_l']")
 
