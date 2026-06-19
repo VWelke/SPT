@@ -42,7 +42,7 @@ MASK_FILES = {
 }
 
 LMAX     = 3000
-OUT_FILE = "/sptlocal/user/vwelke/lowl_bb_tiles/noise_psd_BB_fits_220ghz.npz"
+OUT_FILE = os.path.expanduser("~/Initial_test/outputs/noise_psd_BB_fits_220ghz.npz")
 
 
 def main():
