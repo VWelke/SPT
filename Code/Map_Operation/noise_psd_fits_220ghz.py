@@ -5,7 +5,9 @@ Run from terminal: python noise_psd_fits.py
 """
 
 # cd ~/Initial_test/Code/Map_Operation
-# nohup python noise_psd_fits_220ghz.py > noise_psd_fits_220ghz.log 2>&1 &
+
+# nohup python -u noise_psd_fits_220ghz.py > noise_psd_fits_220ghz.log 2>&1 &
+
 # tail -f noise_psd_fits_220ghz.log
 
 import os
