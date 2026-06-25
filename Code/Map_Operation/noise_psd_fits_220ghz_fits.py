@@ -20,25 +20,25 @@ import time
 SIGNFLIP_DIR = "/sptgrid/analysis/spt3g_d1_midell_tqu_healpix/real_data_maps/signflip_noise/"
 
 index = np.random.randint(1, 500, 1) 
-#SIGNFLIP_FILES = [
-#    os.path.join(SIGNFLIP_DIR, f"signflip_noise_permutation{i}_220ghz.fits") for i in index
-#]
-
 SIGNFLIP_FILES = [
-    os.path.join(SIGNFLIP_DIR, f"signflip_noise_permutation499_220ghz.fits") for i in index
+    os.path.join(SIGNFLIP_DIR, f"signflip_noise_permutation{i}_220ghz.fits") for i in index
 ]
+
+#SIGNFLIP_FILES = [
+#    os.path.join(SIGNFLIP_DIR, f"signflip_noise_permutation499_220ghz.fits") for i in index
+#]
 
 MASK_DIR    = "/sptlocal/user/creichardt/bb2020"
 ACTIVE_MASK = "mask_250_nd30"
 
 MASK_FILES = {
-    "mask_250_30"   : "puremask8192_0p5medwt_250mJy_30arcmin.npz",
-    "mask_250_60"   : "puremask8192_0p5medwt_250mJy_60arcmin.npz",
-    "mask_250_nd30" : "puremask8192_0p5medwt_250mJy_nodisk_30arcmin.npz",
-    "mask_250_nd60" : "puremask8192_0p5medwt_250mJy_nodisk_60arcmin.npz",
-    "mask_100_30"   : "puremask8192_0p5medwt_100mJy_30arcmin.npz",
-    "mask_apod_30"  : "puremask8192_0p5medwt_30arcmin.npz",
-    "mask_apod_60"  : "puremask8192_0p5medwt_60arcmin.npz",
+    #"mask_250_30"   : "puremask8192_0p5medwt_250mJy_30arcmin.npz",
+    #"mask_250_60"   : "puremask8192_0p5medwt_250mJy_60arcmin.npz",
+    "mask_250_nd30" : "puremask8192_0p5medwt_250mJy_nodisk_30arcmin.npz"
+    #"mask_250_nd60" : "puremask8192_0p5medwt_250mJy_nodisk_60arcmin.npz",
+    #"mask_100_30"   : "puremask8192_0p5medwt_100mJy_30arcmin.npz",
+    #"mask_apod_30"  : "puremask8192_0p5medwt_30arcmin.npz",
+    #"mask_apod_60"  : "puremask8192_0p5medwt_60arcmin.npz",
 }
 
 LMAX     = 3000
@@ -51,7 +51,7 @@ def main():
     # Load mask
     mask_path = os.path.join(MASK_DIR, MASK_FILES[ACTIVE_MASK])
     with np.load(mask_path) as d:
-        apod = d[d.files[0]].astype(float)
+        apod = d[d.files[0]].astype(np.float32)  
     nside_mask = hp.get_nside(apod)
     print(f"Mask    : {ACTIVE_MASK}  nside={nside_mask}")
     print(f"LMAX    : {LMAX}")
@@ -63,10 +63,12 @@ def main():
 
     for i, fpath in enumerate(SIGNFLIP_FILES):
         t_file_start = time.time()
-        Q_sf = hp.read_map(fpath, field=1, partial=False)
-        U_sf = hp.read_map(fpath, field=2, partial=False)
+        Q_sf = hp.read_map(fpath, field=1, partial=False, dtype=np.float32)
+        U_sf = hp.read_map(fpath, field=2, partial=False, dtype=np.float32)
 
         apod_sf  =  apod 
+
+        # mask load
 
         # Build combined mask from observed pixels + apodisation
         obs_sf       = np.isfinite(Q_sf) & (Q_sf != hp.UNSEEN)
@@ -77,8 +79,8 @@ def main():
         U_sf[apply_mask]   *= apod_sf[apply_mask]
         U_sf[~apply_mask]   = 0.0
 
-        T_zeros = np.zeros(len(Q_sf))
-        cls      = hp.anafast([T_zeros, Q_sf, U_sf], lmax=LMAX)
+        T_zeros = np.zeros(len(Q_sf), dtype=np.float32)
+        cls = hp.anafast([T_zeros, Q_sf, U_sf], lmax=LMAX, iter=0)
         cl_BB_sum += cls[2]
 
         del Q_sf, U_sf, T_zeros, cls
