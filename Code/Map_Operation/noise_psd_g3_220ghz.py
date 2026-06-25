@@ -1,48 +1,42 @@
 """
-noise_psd_fits.py
-Compute BB noise pseudo-Cl from sign-flip FITS maps.
-Run from terminal: python noise_psd_fits.py
+noise_psd_g3.py
+Compute BB noise pseudo-Cl from sign-flip G3 maps.
+Run from terminal: python noise_psd_g3_220ghz.py
 """
 
 # cd ~/Initial_test/Code/Map_Operation
 
-# nohup python -u noise_psd_fits_220ghz.py > noise_psd_fits_220ghz.log 2>&1 &
+# nohup python -u noise_psd_g3_220ghz.py > noise_psd_g3_220ghz.log 2>&1 &
 
-# tail -f noise_psd_fits_220ghz.log
+# tail -f noise_psd_g3_220ghz.log
 
 import os
+import glob
 import numpy as np
 import healpy as hp
 import time
+from spt3g import core, maps
 
-# Config — edit these before running
+# Config
 
-SIGNFLIP_DIR = "/sptgrid/analysis/spt3g_d1_midell_tqu_healpix/real_data_maps/signflip_noise/"
+SIGNFLIP_DIR = "/sptgrid/user/javva/baseline_bb_coadd_match/coadd_fullauto/full/"
+FREQ         = "220GHz"
 
-index = np.random.randint(1, 500, 1) 
-SIGNFLIP_FILES = [
-    os.path.join(SIGNFLIP_DIR, f"signflip_noise_permutation{i}_220ghz.fits") for i in index
-]
-
-#SIGNFLIP_FILES = [
-#    os.path.join(SIGNFLIP_DIR, f"signflip_noise_permutation499_220ghz.fits") for i in index
-#]
+# Pick N random sign-flip files from whatever is available in the directory
+N_FILES        = 10
+all_sf_files   = sorted(glob.glob(os.path.join(SIGNFLIP_DIR, "signflip_*_bundle_000.g3.gz")))  # sorted so input list is deterministic; selection is still random each run
+rng            = np.random.default_rng()
+SIGNFLIP_FILES = list(rng.choice(all_sf_files, size=min(N_FILES, len(all_sf_files)), replace=False))
 
 MASK_DIR    = "/sptlocal/user/creichardt/bb2020"
-ACTIVE_MASK = "mask_250_nd30"
+ACTIVE_MASK = "mask_100_30"
 
 MASK_FILES = {
-    #"mask_250_30"   : "puremask8192_0p5medwt_250mJy_30arcmin.npz",
-    #"mask_250_60"   : "puremask8192_0p5medwt_250mJy_60arcmin.npz",
-    "mask_250_nd30" : "puremask8192_0p5medwt_250mJy_nodisk_30arcmin.npz"
-    #"mask_250_nd60" : "puremask8192_0p5medwt_250mJy_nodisk_60arcmin.npz",
-    #"mask_100_30"   : "puremask8192_0p5medwt_100mJy_30arcmin.npz",
-    #"mask_apod_30"  : "puremask8192_0p5medwt_30arcmin.npz",
-    #"mask_apod_60"  : "puremask8192_0p5medwt_60arcmin.npz",
+    "mask_100_30" : "puremask_0p5medwt_100mJy_30arcmin.npz",
 }
 
 LMAX     = 3000
-OUT_FILE = os.path.expanduser("~/Initial_test/outputs/noise_psd_BB_fits_220ghz.npz")
+OUT_FILE = os.path.expanduser("~/Initial_test/Code/Map_Operation/outputs/noise_psd_BB_g3_220ghz.npz")
 
 
 def main():
@@ -51,51 +45,65 @@ def main():
     # Load mask
     mask_path = os.path.join(MASK_DIR, MASK_FILES[ACTIVE_MASK])
     with np.load(mask_path) as d:
-        apod = d[d.files[0]].astype(np.float32)  
+        apod = d[d.files[0]].astype(np.float32)
     nside_mask = hp.get_nside(apod)
-    print(f"Mask    : {ACTIVE_MASK}  nside={nside_mask}")
-    print(f"LMAX    : {LMAX}")
-    print(f"N files : {len(SIGNFLIP_FILES)}")
+    print(f"Mask      : {ACTIVE_MASK}  nside={nside_mask}")
+    print(f"FREQ      : {FREQ}")
+    print(f"LMAX      : {LMAX}")
+    print(f"N files   : {len(SIGNFLIP_FILES)}")
+    print(f"Available : {len(all_sf_files)}")
     print()
 
     cl_BB_sum = np.zeros(LMAX + 1)
-    N = len(SIGNFLIP_FILES)
+    N_done = 0
 
     for i, fpath in enumerate(SIGNFLIP_FILES):
         t_file_start = time.time()
-        Q_sf = hp.read_map(fpath, field=1, partial=False, dtype=np.float32)
-        U_sf = hp.read_map(fpath, field=2, partial=False, dtype=np.float32)
 
-        apod_sf  =  apod 
+        try:
+            sf_frame = None
+            for frame in core.G3File(fpath):
+                if frame.type == core.G3FrameType.Map and frame['Id'] == FREQ:
+                    sf_frame = frame
+                    break
+        except Exception as e:
+            print(f"  [{i+1}/{len(SIGNFLIP_FILES)}]  ERROR: {e} — skipping {os.path.basename(fpath)}")
+            continue
 
-        # mask load
+        if sf_frame is None:
+            print(f"  [{i+1}/{len(SIGNFLIP_FILES)}]  WARNING: no '{FREQ}' frame — skipping {os.path.basename(fpath)}")
+            continue
 
-        # Build combined mask from observed pixels + apodisation
-        obs_sf       = np.isfinite(Q_sf) & (Q_sf != hp.UNSEEN)
-        apply_mask   = obs_sf & (apod_sf > 0)
+        maps.RemoveWeights(sf_frame)
+        Q_sf   = np.array(sf_frame['Q']).astype(np.float32)
+        U_sf   = np.array(sf_frame['U']).astype(np.float32)
+        obs_sf = np.array(sf_frame['Wpol'].TT) > 0
+        del sf_frame
 
-        Q_sf[apply_mask]   *= apod_sf[apply_mask]
-        Q_sf[~apply_mask]   = 0.0
-        U_sf[apply_mask]   *= apod_sf[apply_mask]
-        U_sf[~apply_mask]   = 0.0
+        apply_mask         = obs_sf & (apod > 0)
+        Q_sf[apply_mask]  *= apod[apply_mask]
+        Q_sf[~apply_mask]  = 0.0
+        U_sf[apply_mask]  *= apod[apply_mask]
+        U_sf[~apply_mask]  = 0.0
 
         T_zeros = np.zeros(len(Q_sf), dtype=np.float32)
-        cls = hp.anafast([T_zeros, Q_sf, U_sf], lmax=LMAX, iter=0)
+        cls     = hp.anafast([T_zeros, Q_sf, U_sf], lmax=LMAX, iter=0)
         cl_BB_sum += cls[2]
+        N_done += 1
 
         del Q_sf, U_sf, T_zeros, cls
-        print(f"  [{i+1}/{N}]  {os.path.basename(fpath)}")
-        print(f"    Time for file: {time.time() - t_file_start:.2f} seconds")
+        print(f"  [{i+1}/{len(SIGNFLIP_FILES)}]  {os.path.basename(fpath)}  "
+              f"({time.time() - t_file_start:.1f}s)")
 
-    cl_BB_noise = cl_BB_sum / N
+    cl_BB_noise = cl_BB_sum / N_done
     ell         = np.arange(LMAX + 1)
 
     os.makedirs(os.path.dirname(OUT_FILE), exist_ok=True)
-    np.savez(OUT_FILE, ell=ell, N_l=cl_BB_noise, N=N, mask=ACTIVE_MASK)
-    t_end = time.time()
-    print(f"\nTotal time: {t_end - t_start:.2f} seconds")
-    print(f"\nDone. Saved → {OUT_FILE}")
-    print(f"Load with: data = np.load('{OUT_FILE}'); ell = data['ell']; N_l = data['N_l']")
+    np.savez(OUT_FILE, ell=ell, N_l=cl_BB_noise, N=N_done, mask=ACTIVE_MASK, freq=FREQ)
+
+    print(f"\nTotal time : {time.time() - t_start:.1f}s")
+    print(f"Done. N={N_done} files averaged → {OUT_FILE}")
+    print(f"Load with  : data = np.load('{OUT_FILE}'); ell = data['ell']; N_l = data['N_l']")
 
 
 if __name__ == "__main__":

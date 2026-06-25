@@ -64,3 +64,7 @@ When used with nside=2048 maps, downgrade with `hp.ud_grade(apod, nside_out=2048
 change code to for each frequency pick 100 fits
  cd  /sptgrid/analysis/spt3g_d1_midell_tqu_healpix/real_data_maps/signflip_noise/
 
+
+## simulated maps
+
+/sptgrid/analysis/spt3g_d1_midell_tqu_healpix/simulated_maps

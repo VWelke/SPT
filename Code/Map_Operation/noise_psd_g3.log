@@ -1,0 +1,7 @@
+nohup: ignoring input
+Traceback (most recent call last):
+  File "/home/vwelke/Initial_test/Code/Map_Operation/noise_psd_g3.py", line 106, in <module>
+    main()
+  File "/home/vwelke/Initial_test/Code/Map_Operation/noise_psd_g3.py", line 51, in main
+    raise RuntimeError("No sign-flip files listed. Add paths to SIGNFLIP_FILES.")
+RuntimeError: No sign-flip files listed. Add paths to SIGNFLIP_FILES.
