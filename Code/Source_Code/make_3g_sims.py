@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-os.environ["OMP_NUM_THREADS"] = "8"
+os.environ["OMP_NUM_THREADS"] = "8"  # need to use multiple threads for healpy synalm
 import  sys
 import argparse
 import glob
@@ -23,6 +23,7 @@ cfg_parser.add_argument(
 args, _ = cfg_parser.parse_known_args()
 
 # https://stackoverflow.com/a/20422915
+# this custom action allows for a --arg and --no-arg option to be specified
 class ActionNoYes(argparse.Action):
     def __init__(self, option_strings, dest, default=None, required=False, help=None):
 
@@ -653,10 +654,12 @@ def get_filename(subdir, name, sim_num, freq=None):
     return filename
 
 
+
 # ===========================================================
 # Set up simulation parameters
 # ===========================================================
 # list of sim numbers to generate
+# this is used to set the random seed for each sim, so that sims can be generated in multiple runs
 sim_range = list(range(args.sim_index, args.sim_index + args.num_sims))
 
 # Set up dictionary to keep track of alms made for each sim.
@@ -670,6 +673,7 @@ for freq in args.freqs:
 # Lower lmax to that allowed by nside
 args.lmax = min([3 * args.nside - 1, args.lmax])
 
+# just plot the pseudo-Cl wiwth no make nor mode-coupling correction
 if args.debug:
     import pylab as plt
 
@@ -752,6 +756,8 @@ if args.cmb:
 
     # Read CAMB spectrum
     # By default these units will be uK^2
+    # reads the theoretical CMB power spectrum from a CAMB file
+    # CAMB is a software package for calculating the theoretical power spectrum of the Cosmic Microwave Background (CMB) radiation based on cosmological parameters. The CAMB file contains the predicted power spectra for temperature (TT), E-mode polarization (EE), B-mode polarization (BB), and the cross-correlation between temperature and E-mode polarization (TE).
     cls_dict = cmb.read_camb(args.camb_file, as_cls=True, lmax=args.lmax, lmin=0)
     if args.pol:
         camb_cls = np.asarray([cls_dict[x] for x in ['TT', 'EE', 'BB', 'TE']])
@@ -762,6 +768,7 @@ if args.cmb:
     camb_cls = np.asarray(camb_cls)
     camb_cls = camb_cls * (core.G3Units.uK ** 2.0)
 
+    # turn a bunch of Cls to alms and then to maps (reverse of anafast)
     for sim_num in sim_range:
         core.log_info("Generating sim %d" % sim_num, unit='CMB')
 
@@ -771,7 +778,8 @@ if args.cmb:
 
         alm_file = get_filename('cmb', 'cmb_alms', sim_num)
         map_file = get_filename('cmb', 'cmb_map', sim_num)
-
+        
+        # and this saves the alms and maps to files, with options to store the alm and map, and specifying the output filenames, lmax, nside, and polarization settings.
         sim_tools.save_sims(
             alms=alms,
             store_alm=True,
@@ -782,7 +790,8 @@ if args.cmb:
             nside=args.nside,
             pol=args.pol,
         )
-
+        
+        
         for freq in args.freqs:
             coadd_alms[freq][sim_num].append(alm_file)
 
