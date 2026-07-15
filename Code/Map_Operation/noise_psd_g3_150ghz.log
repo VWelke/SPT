@@ -1,0 +1,21 @@
+nohup: ignoring input
+Mask      : mask_100_30  nside=2048
+FREQ      : 150GHz
+LMAX      : 3000
+N files   : 10
+Available : 103
+
+  [1/10]  signflip_087_bundle_000.g3.gz  (70.5s)
+  [2/10]  signflip_042_bundle_000.g3.gz  (85.1s)
+  [3/10]  signflip_089_bundle_000.g3.gz  (84.5s)
+  [4/10]  signflip_002_bundle_000.g3.gz  (84.7s)
+  [5/10]  signflip_085_bundle_000.g3.gz  (87.8s)
+  [6/10]  signflip_086_bundle_000.g3.gz  (71.9s)
+  [7/10]  signflip_090_bundle_000.g3.gz  (72.1s)
+  [8/10]  signflip_059_bundle_000.g3.gz  (72.6s)
+  [9/10]  signflip_024_bundle_000.g3.gz  (73.4s)
+  [10/10]  signflip_068_bundle_000.g3.gz  (76.1s)
+
+Total time : 780.5s
+Done. N=10 files averaged → /home/vwelke/Initial_test/Code/Map_Operation/outputs/noise_psd_BB_g3_150ghz.npz
+Load with  : data = np.load('/home/vwelke/Initial_test/Code/Map_Operation/outputs/noise_psd_BB_g3_150ghz.npz'); ell = data['ell']; N_l = data['N_l']

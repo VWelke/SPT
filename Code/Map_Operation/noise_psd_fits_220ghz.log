@@ -3,17 +3,4 @@ Mask    : mask_250_nd30  nside=8192
 LMAX    : 3000
 N files : 10
 
-  [1/10]  signflip_noise_permutation025_220ghz.fits  (346.1s)
-  [2/10]  signflip_noise_permutation120_220ghz.fits  (335.9s)
-  [3/10]  signflip_noise_permutation241_220ghz.fits  (335.7s)
-  [4/10]  signflip_noise_permutation054_220ghz.fits  (335.5s)
-  [5/10]  signflip_noise_permutation396_220ghz.fits  (335.6s)
-  [6/10]  signflip_noise_permutation215_220ghz.fits  (335.5s)
-  [7/10]  signflip_noise_permutation248_220ghz.fits  (334.1s)
-  [8/10]  signflip_noise_permutation190_220ghz.fits  (334.6s)
-  [9/10]  signflip_noise_permutation005_220ghz.fits  (335.1s)
-  [10/10]  signflip_noise_permutation298_220ghz.fits  (335.6s)
-
-Total time: 3376.6s
-Done. N=10 files averaged → /home/vwelke/Initial_test/outputs/noise_psd_BB_fits_220ghz.npz
-Load with: data = np.load('/home/vwelke/Initial_test/outputs/noise_psd_BB_fits_220ghz.npz'); ell = data['ell']; N_l = data['N_l']
+  [1/10]  signflip_noise_permutation224_220ghz.fits  (346.9s)

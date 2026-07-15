@@ -1,0 +1,19 @@
+nohup: ignoring input
+Mask    : mask_250_nd30  nside=8192
+LMAX    : 3000
+N files : 10
+
+  [1/10]  signflip_noise_permutation005_150ghz.fits  (382.4s)
+  [2/10]  signflip_noise_permutation446_150ghz.fits  (366.4s)
+  [3/10]  signflip_noise_permutation329_150ghz.fits  (358.7s)
+  [4/10]  signflip_noise_permutation163_150ghz.fits  (436.3s)
+  [5/10]  signflip_noise_permutation204_150ghz.fits  (502.2s)
+  [6/10]  signflip_noise_permutation496_150ghz.fits  (392.9s)
+  [7/10]  signflip_noise_permutation472_150ghz.fits  (353.2s)
+  [8/10]  signflip_noise_permutation048_150ghz.fits  (373.3s)
+  [9/10]  signflip_noise_permutation397_150ghz.fits  (358.9s)
+  [10/10]  signflip_noise_permutation382_150ghz.fits  (368.4s)
+
+Total time: 3916.2s
+Done. N=10 files averaged → /home/vwelke/Initial_test/outputs/noise_psd_BB_fits_150ghz.npz
+Load with: data = np.load('/home/vwelke/Initial_test/outputs/noise_psd_BB_fits_150ghz.npz'); ell = data['ell']; N_l = data['N_l']
